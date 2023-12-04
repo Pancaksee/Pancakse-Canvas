@@ -1,0 +1,45 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Pancakse <pancakseyt@gmail.com>
+Date: Sun, 3 Dec 2023 19:21:41 -0700
+Subject: [PATCH] Allow any username
+
+Pancakse's Note This config feature enables a feature to allow players to log in with any username
+The default is set to false
+
+diff --git a/src/main/java/me/dueris/canvas/CanvasConfig.java b/src/main/java/me/dueris/canvas/CanvasConfig.java
+index 9e802fbe8e5f1a3c24cb6bc9254c72a2a0c3fde1..426ae4086adc0180e3f3ba06cf6c005476ca891e 100644
+--- a/src/main/java/me/dueris/canvas/CanvasConfig.java
++++ b/src/main/java/me/dueris/canvas/CanvasConfig.java
+@@ -152,4 +152,9 @@ public class CanvasConfig {
+         }
+         return builder.build();
+     }
++
++    public static boolean allowAnyUsername = false;
++    private static void allowAnyUsername() {
++        allowAnyUsername = getBoolean("settings.player.allow-any-username", allowAnyUsername);
++    }
+ }
+\ No newline at end of file
+diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
+index 3dcccca8ede9b203c24ba29b2020a583297b895c..272670750afe2d07e51f2f7589c5718a2c155ed4 100644
+--- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
++++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
+@@ -16,6 +16,8 @@ import java.util.concurrent.atomic.AtomicInteger;
+ import javax.annotation.Nullable;
+ import javax.crypto.Cipher;
+ import javax.crypto.SecretKey;
++
++import me.dueris.canvas.CanvasConfig;
+ import net.minecraft.DefaultUncaughtExceptionHandler;
+ import net.minecraft.core.UUIDUtil;
+ import net.minecraft.network.Connection;
+@@ -160,7 +162,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+     @Override
+     public void handleHello(ServerboundHelloPacket packet) {
+         Validate.validState(this.state == ServerLoginPacketListenerImpl.State.HELLO, "Unexpected hello packet", new Object[0]);
+-        Validate.validState(ServerLoginPacketListenerImpl.isValidUsername(packet.name()), "Invalid characters in username", new Object[0]);
++        if (!CanvasConfig.allowAnyUsername) Validate.validState(ServerLoginPacketListenerImpl.isValidUsername(packet.name()), "Invalid characters in username", new Object[0]); // Canvas - Allow any username
+         // Paper start - validate usernames
+         if (io.papermc.paper.configuration.GlobalConfiguration.get().proxies.isProxyOnlineMode() && io.papermc.paper.configuration.GlobalConfiguration.get().unsupportedSettings.performUsernameValidation) {
+             if (!this.iKnowThisMayNotBeTheBestIdeaButPleaseDisableUsernameValidation && !validateUsername(packet.name())) {
